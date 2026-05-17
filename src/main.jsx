@@ -1,11 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 
 function App() {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
-  const [items, setItems] = useState([]);
+
+  const [items, setItems] = useState(() => {
+    const saved = localStorage.getItem("expenses");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("expenses", JSON.stringify(items));
+  }, [items]);
 
   const addExpense = () => {
     if (!description || !amount || !date) return;
@@ -58,7 +66,13 @@ function App() {
           boxShadow: "0 0 15px rgba(0,0,0,0.1)",
         }}
       >
-        <h1 style={{ textAlign: "center", color: "#2563eb" }}>
+        <h1
+          style={{
+            textAlign: "center",
+            color: "#2563eb",
+            marginBottom: "20px",
+          }}
+        >
           Expense Tracker 💰
         </h1>
 
@@ -110,6 +124,7 @@ function App() {
               }}
             >
               <h3>📅 {dateKey}</h3>
+
               <h4>Total: ₹{total}</h4>
 
               {grouped[dateKey].map((item) => (
