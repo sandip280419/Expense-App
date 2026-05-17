@@ -4,21 +4,24 @@ import ReactDOM from "react-dom/client";
 function App() {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
+  const [date, setDate] = useState("");
   const [items, setItems] = useState([]);
 
   const addExpense = () => {
-    if (!description || !amount) return;
+    if (!description || !amount || !date) return;
 
     const newItem = {
       id: Date.now(),
       description,
       amount,
+      date,
     };
 
     setItems([newItem, ...items]);
 
     setDescription("");
     setAmount("");
+    setDate("");
   };
 
   const total = items.reduce(
@@ -30,8 +33,8 @@ function App() {
     <div
       style={{
         minHeight: "100vh",
-        background: "#f3f4f6",
-        padding: "20px",
+        background: "#f1f5f9",
+        padding: "30px",
         fontFamily: "Arial",
       }}
     >
@@ -40,36 +43,53 @@ function App() {
           maxWidth: "500px",
           margin: "auto",
           background: "white",
-          padding: "20px",
-          borderRadius: "12px",
-          boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+          padding: "25px",
+          borderRadius: "15px",
+          boxShadow: "0 0 15px rgba(0,0,0,0.1)",
         }}
       >
-        <h1 style={{ textAlign: "center" }}>
-          বাংলা Expense App 💰
+        <h1 style={{ textAlign: "center", color: "#2563eb" }}>
+          Expense Tracker 💰
         </h1>
 
         <input
           type="text"
-          placeholder="খরচের নাম"
+          placeholder="Expense Name"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           style={{
             width: "100%",
-            padding: "10px",
-            marginTop: "10px",
+            padding: "12px",
+            marginTop: "15px",
+            borderRadius: "8px",
+            border: "1px solid #ccc",
           }}
         />
 
         <input
           type="number"
-          placeholder="টাকার পরিমাণ"
+          placeholder="Amount"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           style={{
             width: "100%",
-            padding: "10px",
-            marginTop: "10px",
+            padding: "12px",
+            marginTop: "15px",
+            borderRadius: "8px",
+            border: "1px solid #ccc",
+          }}
+        />
+
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "12px",
+            marginTop: "15px",
+            borderRadius: "8px",
+            border: "1px solid #ccc",
           }}
         />
 
@@ -77,19 +97,20 @@ function App() {
           onClick={addExpense}
           style={{
             width: "100%",
-            padding: "12px",
-            marginTop: "15px",
+            padding: "14px",
+            marginTop: "20px",
             background: "#2563eb",
             color: "white",
             border: "none",
             borderRadius: "8px",
+            fontSize: "16px",
             cursor: "pointer",
           }}
         >
           Add Expense
         </button>
 
-        <h2 style={{ marginTop: "20px" }}>
+        <h2 style={{ marginTop: "25px" }}>
           Total: ₹{total}
         </h2>
 
@@ -97,13 +118,17 @@ function App() {
           <div
             key={item.id}
             style={{
-              padding: "10px",
-              marginTop: "10px",
-              background: "#e5e7eb",
+              background: "#e2e8f0",
+              padding: "12px",
               borderRadius: "8px",
+              marginTop: "12px",
             }}
           >
-            {item.description} — ₹{item.amount}
+            <strong>{item.description}</strong>
+            <br />
+            ₹{item.amount}
+            <br />
+            {item.date}
           </div>
         ))}
       </div>
