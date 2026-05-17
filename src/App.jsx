@@ -1,4 +1,3 @@
-import "@fontsource/poppins";
 import React, { useState, useEffect } from "react";
 
 function App() {
@@ -10,7 +9,6 @@ function App() {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Food");
-
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
@@ -69,15 +67,6 @@ function App() {
     setCategory(item.category);
   };
 
-  const groupedExpenses = expenses.reduce((groups, expense) => {
-    if (!groups[expense.date]) {
-      groups[expense.date] = [];
-    }
-
-    groups[expense.date].push(expense);
-    return groups;
-  }, {});
-
   const grandTotal = expenses.reduce(
     (total, item) => total + item.amount,
     0
@@ -85,9 +74,9 @@ function App() {
 
   return (
     <div style={containerStyle}>
-      <h1 style={titleStyle}>💰 Expense Tracker</h1>
+      <h1 style={titleStyle}>Expense Tracker</h1>
 
-      <div style={cardStyle}>
+      <div style={formStyle}>
         <input
           type="date"
           value={date}
@@ -124,177 +113,166 @@ function App() {
           <option>Other</option>
         </select>
 
-        <button onClick={addExpense} style={buttonStyle}>
-          {editingId ? "✏️ Update Expense" : "✨ Add Expense"}
+        <button onClick={addExpense} style={addButton}>
+          {editingId ? "Update Expense" : "Add Expense"}
         </button>
       </div>
 
-      <div style={totalStyle}>
-        Grand Total: ₹{grandTotal.toLocaleString()}
+      <div style={totalBox}>
+        Grand Total: ₹{grandTotal}
       </div>
 
-      {Object.keys(groupedExpenses)
-        .sort((a, b) => new Date(b) - new Date(a))
-        .map((dateKey) => {
-          const total = groupedExpenses[dateKey].reduce(
-            (sum, item) => sum + item.amount,
-            0
-          );
+      {expenses
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .map((item) => (
+          <div key={item.id} style={expenseCard}>
+            <div>
+              <h3 style={{ marginBottom: "5px" }}>
+                {item.name}
+              </h3>
 
-          return (
-            <div key={dateKey} style={dateCard}>
-              <div style={dateHeader}>
-                <span>
-                  📅{" "}
-                  {new Date(dateKey).toLocaleDateString("en-GB", {
-                    day: "numeric",
+              <p style={amountStyle}>₹{item.amount}</p>
+
+              <small style={dateStyle}>
+                📅{" "}
+                {new Date(item.date).toLocaleDateString(
+                  "en-GB",
+                  {
+                    day: "2-digit",
                     month: "long",
                     year: "numeric",
-                  })}
-                </span>
+                  }
+                )}
+              </small>
 
-                <span>₹{total}</span>
-              </div>
+              <br />
 
-              {groupedExpenses[dateKey].map((item) => (
-                <div key={item.id} style={expenseItem}>
-                  <div>
-                    <h3 style={{ margin: 0 }}>{item.name}</h3>
-
-                    <p style={{ margin: "5px 0", color: "#38bdf8" }}>
-                      ₹{item.amount}
-                    </p>
-
-                    <small>{item.category}</small>
-                  </div>
-
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <button
-                      onClick={() => editExpense(item)}
-                      style={editButton}
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      onClick={() => deleteExpense(item.id)}
-                      style={deleteButton}
-                    >
-                      X
-                    </button>
-                  </div>
-                </div>
-              ))}
+              <small style={{ color: "#555" }}>
+                🏷 {item.category}
+              </small>
             </div>
-          );
-        })}
+
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={() => editExpense(item)}
+                style={editButton}
+              >
+                Edit
+              </button>
+
+              <button
+                onClick={() => deleteExpense(item.id)}
+                style={deleteButton}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
     </div>
   );
 }
 
 const containerStyle = {
   maxWidth: "650px",
-  margin: "40px auto",
-  padding: "30px",
-  background: "#0f172a",
-  borderRadius: "25px",
-  color: "white",
-  fontFamily: "'Poppins', sans-serif",
+  margin: "30px auto",
+  padding: "25px",
+  background: "#f4f4f4",
+  borderRadius: "15px",
+  fontFamily: "Times New Roman, Times, serif",
 };
 
 const titleStyle = {
   textAlign: "center",
-  marginBottom: "25px",
-  fontSize: "42px",
-  color: "#38bdf8",
+  marginBottom: "20px",
+  color: "#1d4ed8",
+  fontSize: "34px",
+  fontFamily: "Times New Roman, Times, serif",
 };
 
-const cardStyle = {
-  background: "#1e293b",
-  padding: "25px",
-  borderRadius: "20px",
+const formStyle = {
+  background: "white",
+  padding: "20px",
+  borderRadius: "12px",
+  boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
 };
 
 const inputStyle = {
   width: "100%",
-  padding: "18px",
-  marginBottom: "15px",
-  borderRadius: "12px",
-  border: "none",
-  outline: "none",
-  background: "#334155",
-  color: "white",
-  fontSize: "18px",
+  padding: "12px",
+  marginBottom: "12px",
+  borderRadius: "8px",
+  border: "1px solid #ccc",
+  fontSize: "16px",
+  fontFamily: "Times New Roman, Times, serif",
   textTransform: "uppercase",
   boxSizing: "border-box",
-  fontFamily: "'Poppins', sans-serif",
 };
 
-const buttonStyle = {
+const addButton = {
   width: "100%",
-  padding: "16px",
-  background: "#0ea5e9",
+  padding: "12px",
+  background: "#2563eb",
   color: "white",
   border: "none",
-  borderRadius: "12px",
-  fontSize: "18px",
+  borderRadius: "8px",
+  fontSize: "17px",
   cursor: "pointer",
-  fontWeight: "bold",
+  fontFamily: "Times New Roman, Times, serif",
 };
 
-const totalStyle = {
+const totalBox = {
   marginTop: "20px",
-  background: "#082f49",
-  padding: "20px",
-  borderRadius: "15px",
-  fontSize: "28px",
-  fontWeight: "bold",
-  color: "#38bdf8",
-};
-
-const dateCard = {
-  background: "#111827",
-  marginTop: "25px",
-  padding: "20px",
-  borderRadius: "18px",
-};
-
-const dateHeader = {
-  display: "flex",
-  justifyContent: "space-between",
-  marginBottom: "15px",
-  fontSize: "20px",
-  fontWeight: "bold",
-};
-
-const expenseItem = {
-  background: "#1e293b",
+  background: "#dbeafe",
   padding: "15px",
-  borderRadius: "12px",
-  marginBottom: "12px",
+  borderRadius: "10px",
+  fontSize: "24px",
+  fontWeight: "bold",
+  color: "#1d4ed8",
+  fontFamily: "Times New Roman, Times, serif",
+};
+
+const expenseCard = {
+  background: "white",
+  marginTop: "15px",
+  padding: "15px",
+  borderRadius: "10px",
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
+  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+};
+
+const amountStyle = {
+  color: "#2563eb",
+  fontWeight: "bold",
+  margin: "5px 0",
+  fontFamily: "Times New Roman, Times, serif",
+};
+
+const dateStyle = {
+  color: "#444",
+  fontFamily: "Times New Roman, Times, serif",
 };
 
 const editButton = {
   background: "#22c55e",
   color: "white",
   border: "none",
-  padding: "10px 14px",
-  borderRadius: "10px",
+  padding: "8px 12px",
+  borderRadius: "6px",
   cursor: "pointer",
-  fontWeight: "bold",
+  fontFamily: "Times New Roman, Times, serif",
 };
 
 const deleteButton = {
   background: "#ef4444",
   color: "white",
   border: "none",
-  padding: "10px 14px",
-  borderRadius: "10px",
+  padding: "8px 12px",
+  borderRadius: "6px",
   cursor: "pointer",
-  fontWeight: "bold",
+  fontFamily: "Times New Roman, Times, serif",
 };
 
 export default App;
