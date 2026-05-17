@@ -5,6 +5,9 @@ function App() {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
+  const [category, setCategory] = useState("Food");
+  const [search, setSearch] = useState("");
+  const [editId, setEditId] = useState(null);
 
   const [items, setItems] = useState(() => {
     const saved = localStorage.getItem("expenses");
@@ -18,34 +21,75 @@ function App() {
   const addExpense = () => {
     if (!description || !amount || !date) return;
 
-    const newItem = {
-      id: Date.now(),
-      description,
-      amount: parseFloat(amount),
-      date,
-    };
+    if (editId) {
+      setItems(
+        items.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                description,
+                amount: parseFloat(amount),
+                date,
+                category,
+              }
+            : item
+        )
+      );
 
-    setItems([newItem, ...items]);
+      setEditId(null);
+    } else {
+      const newItem = {
+        id: Date.now(),
+        description,
+        amount: parseFloat(amount),
+        date,
+        category,
+      };
+
+      setItems([newItem, ...items]);
+    }
 
     setDescription("");
     setAmount("");
     setDate("");
+    setCategory("Food");
   };
 
   const deleteExpense = (id) => {
     setItems(items.filter((item) => item.id !== id));
   };
 
+  const editExpense = (item) => {
+    setDescription(item.description);
+    setAmount(item.amount);
+    setDate(item.date);
+    setCategory(item.category);
+    setEditId(item.id);
+  };
+
+  const filteredItems = items.filter((item) =>
+    item.description.toLowerCase().includes(search.toLowerCase())
+  );
+
   const grouped = {};
 
-  items.forEach((item) => {
+  filteredItems.forEach((item) => {
     if (!grouped[item.date]) {
       grouped[item.date] = [];
     }
     grouped[item.date].push(item);
   });
 
-  const grandTotal = items.reduce((sum, item) => sum + item.amount, 0);
+  const grandTotal = filteredItems.reduce(
+    (sum, item) => sum + item.amount,
+    0
+  );
+
+  const currentMonth = new Date().getMonth();
+  const monthlyTotal = filteredItems.reduce((sum, item) => {
+    const itemMonth = new Date(item.date).getMonth();
+    return itemMonth === currentMonth ? sum + item.amount : sum;
+  }, 0);
 
   return (
     <div
@@ -58,7 +102,7 @@ function App() {
     >
       <div
         style={{
-          maxWidth: "550px",
+          maxWidth: "600px",
           margin: "auto",
           background: "white",
           padding: "25px",
@@ -70,11 +114,18 @@ function App() {
           style={{
             textAlign: "center",
             color: "#2563eb",
-            marginBottom: "20px",
           }}
         >
           Expense Tracker 💰
         </h1>
+
+        <input
+          type="text"
+          placeholder="Search Expense"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={inputStyle}
+        />
 
         <input
           type="text"
@@ -99,13 +150,27 @@ function App() {
           style={inputStyle}
         />
 
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          style={inputStyle}
+        >
+          <option>Food</option>
+          <option>Travel</option>
+          <option>Shopping</option>
+          <option>Recharge</option>
+          <option>Rent</option>
+        </select>
+
         <button onClick={addExpense} style={buttonStyle}>
-          Add Expense
+          {editId ? "Update Expense" : "Add Expense"}
         </button>
 
         <h2 style={{ marginTop: "20px" }}>
           Grand Total: ₹{grandTotal}
         </h2>
+
+        <h3>This Month Total: ₹{monthlyTotal}</h3>
 
         {Object.keys(grouped).map((dateKey) => {
           const total = grouped[dateKey].reduce(
@@ -144,21 +209,40 @@ function App() {
                     <strong>{item.description}</strong>
                     <br />
                     ₹{item.amount}
+                    <br />
+                    🏷️ {item.category}
                   </div>
 
-                  <button
-                    onClick={() => deleteExpense(item.id)}
-                    style={{
-                      background: "red",
-                      color: "white",
-                      border: "none",
-                      padding: "8px 12px",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Delete
-                  </button>
+                  <div>
+                    <button
+                      onClick={() => editExpense(item)}
+                      style={{
+                        background: "#2563eb",
+                        color: "white",
+                        border: "none",
+                        padding: "8px",
+                        borderRadius: "6px",
+                        marginRight: "8px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => deleteExpense(item.id)}
+                      style={{
+                        background: "red",
+                        color: "white",
+                        border: "none",
+                        padding: "8px",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
