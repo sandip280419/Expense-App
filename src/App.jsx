@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import ReactDOM from "react-dom/client";
 
 function App() {
   const [expenses, setExpenses] = useState(
@@ -31,6 +30,7 @@ function App() {
 
     setExpenses([...expenses, newExpense]);
 
+    setDate("");
     setName("");
     setAmount("");
     setCategory("Food");
@@ -41,11 +41,22 @@ function App() {
     setExpenses(updated);
   };
 
+  const editExpense = (item) => {
+    setDate(item.date);
+    setName(item.name);
+    setAmount(item.amount);
+    setCategory(item.category);
+
+    deleteExpense(item.id);
+  };
+
   const groupedExpenses = expenses.reduce((groups, expense) => {
     if (!groups[expense.date]) {
       groups[expense.date] = [];
     }
+
     groups[expense.date].push(expense);
+
     return groups;
   }, {});
 
@@ -60,13 +71,18 @@ function App() {
         maxWidth: "600px",
         margin: "30px auto",
         padding: "20px",
-        background: "#fff",
+        background: "#ffffff",
         borderRadius: "12px",
         boxShadow: "0 0 10px rgba(0,0,0,0.1)",
         fontFamily: "Arial",
       }}
     >
-      <h1 style={{ textAlign: "center", color: "#007bff" }}>
+      <h1
+        style={{
+          textAlign: "center",
+          color: "#007bff",
+        }}
+      >
         Expense Tracker 💰
       </h1>
 
@@ -112,7 +128,7 @@ function App() {
           width: "100%",
           padding: "12px",
           background: "#007bff",
-          color: "white",
+          color: "#fff",
           border: "none",
           borderRadius: "8px",
           cursor: "pointer",
@@ -140,20 +156,21 @@ function App() {
                 background: "#f5f5f5",
                 padding: "15px",
                 borderRadius: "10px",
-                marginBottom: "20px",
+                marginTop: "20px",
               }}
             >
               <h3>📅 {dateKey}</h3>
+
               <h4>Total: ₹{total}</h4>
 
               {groupedExpenses[dateKey].map((item) => (
                 <div
                   key={item.id}
                   style={{
-                    background: "white",
+                    background: "#fff",
                     padding: "10px",
-                    marginTop: "10px",
                     borderRadius: "8px",
+                    marginTop: "10px",
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
@@ -161,23 +178,42 @@ function App() {
                 >
                   <div>
                     <strong>{item.name}</strong>
+
                     <div>₹{item.amount}</div>
+
                     <small>🏷 {item.category}</small>
                   </div>
 
-                  <button
-                    onClick={() => deleteExpense(item.id)}
-                    style={{
-                      background: "red",
-                      color: "white",
-                      border: "none",
-                      padding: "8px 12px",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Delete
-                  </button>
+                  <div>
+                    <button
+                      onClick={() => editExpense(item)}
+                      style={{
+                        background: "#007bff",
+                        color: "#fff",
+                        border: "none",
+                        padding: "8px 12px",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        marginRight: "10px",
+                      }}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => deleteExpense(item.id)}
+                      style={{
+                        background: "red",
+                        color: "#fff",
+                        border: "none",
+                        padding: "8px 12px",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -195,4 +231,4 @@ const inputStyle = {
   border: "1px solid #ccc",
 };
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+export default App;
