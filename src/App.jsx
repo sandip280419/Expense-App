@@ -1,29 +1,70 @@
-import React, { useState, useEffect } from "react";
+import "@fontsource/poppins";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 
+// ---------- Reusable Components ----------
+const GlassInput = ({ style, ...props }) => (
+  <input
+    style={{
+      ...inputStyle,
+      ...style,
+    }}
+    {...props}
+  />
+);
+
+const GlassSelect = ({ style, children, ...props }) => (
+  <select
+    style={{
+      ...inputStyle,
+      ...style,
+    }}
+    {...props}
+  >
+    {children}
+  </select>
+);
+
+// ---------- Main App ----------
 function App() {
   const [expenses, setExpenses] = useState(() => {
-    return JSON.parse(localStorage.getItem("expenses")) || [];
+    try {
+      const saved = localStorage.getItem("expenses");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
   const [date, setDate] = useState("");
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Food");
+  const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState(null);
 
+  // Save to localStorage
+  const saveTimeout = useRef(null);
+
   useEffect(() => {
-    localStorage.setItem("expenses", JSON.stringify(expenses));
+    clearTimeout(saveTimeout.current);
+
+    saveTimeout.current = setTimeout(() => {
+      localStorage.setItem("expenses", JSON.stringify(expenses));
+    }, 300);
+
+    return () => clearTimeout(saveTimeout.current);
   }, [expenses]);
 
-  const addExpense = () => {
+  // Add / Update Expense
+  const addExpense = useCallback(() => {
     if (!date || !name || !amount) {
       alert("Please fill all fields");
       return;
     }
 
     if (editingId) {
-      setExpenses(
-        expenses.map((item) =>
+      setExpenses((prev) =>
+        prev.map((item) =>
           item.id === editingId
             ? {
                 ...item,
@@ -39,26 +80,28 @@ function App() {
       setEditingId(null);
     } else {
       const newExpense = {
-        id: Date.now(),
+        id: Date.now() + Math.random(),
         date,
-        name,
+        name: name.trim(),
         amount: Number(amount),
         category,
       };
 
-      setExpenses([...expenses, newExpense]);
+      setExpenses((prev) => [...prev, newExpense]);
     }
 
     setDate("");
     setName("");
     setAmount("");
     setCategory("Food");
-  };
+  }, [date, name, amount, category, editingId]);
 
-  const deleteExpense = (id) => {
-    setExpenses(expenses.filter((item) => item.id !== id));
-  };
+  // Delete Expense
+  const deleteExpense = useCallback((id) => {
+    setExpenses((prev) => prev.filter((item) => item.id !== id));
+  }, []);
 
+  // Edit Expense
   const editExpense = (item) => {
     setEditingId(item.id);
     setDate(item.date);
@@ -67,43 +110,58 @@ function App() {
     setCategory(item.category);
   };
 
-  const grandTotal = expenses.reduce(
-    (total, item) => total + item.amount,
+  // Search
+  const filteredExpenses = expenses.filter((item) =>
+    item.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // Group by date
+  const grouped = filteredExpenses.reduce((acc, item) => {
+    if (!acc[item.date]) acc[item.date] = [];
+    acc[item.date].push(item);
+    return acc;
+  }, {});
+
+  const sortedDates = Object.keys(grouped).sort(
+    (a, b) => new Date(b) - new Date(a)
+  );
+
+  const grandTotal = filteredExpenses.reduce(
+    (sum, item) => sum + item.amount,
     0
   );
 
   return (
     <div style={containerStyle}>
-      <h1 style={titleStyle}>Expense Tracker</h1>
+      {/* Header */}
+      <h1 style={headerStyle}>💰 Expense Tracker</h1>
 
-      <div style={formStyle}>
-        <input
+      {/* Form */}
+      <div style={formCardStyle}>
+        <GlassInput
           type="date"
+          placeholder="DD-MM-YYYY"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          style={inputStyle}
         />
 
-        <input
+        <GlassInput
           type="text"
           placeholder="Expense Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          style={inputStyle}
         />
 
-        <input
+        <GlassInput
           type="number"
           placeholder="Amount"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          style={inputStyle}
         />
 
-        <select
+        <GlassSelect
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          style={inputStyle}
         >
           <option>Food</option>
           <option>Travel</option>
@@ -111,168 +169,257 @@ function App() {
           <option>Bills</option>
           <option>Entertainment</option>
           <option>Other</option>
-        </select>
+        </GlassSelect>
 
-        <button onClick={addExpense} style={addButton}>
-          {editingId ? "Update Expense" : "Add Expense"}
+        <button onClick={addExpense} style={addButtonStyle}>
+          {editingId ? "✏ Update Expense" : "✨ Add Expense"}
         </button>
       </div>
 
-      <div style={totalBox}>
-        Grand Total: ₹{grandTotal}
+      {/* Search */}
+      <GlassInput
+        type="text"
+        placeholder="🔍 Search expenses..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        style={{ marginBottom: "20px" }}
+      />
+
+      {/* Grand Total */}
+      <div style={totalCardStyle}>
+        <span style={totalLabel}>Grand Total</span>
+        <span style={totalValue}>₹{grandTotal.toLocaleString()}</span>
       </div>
 
-      {expenses
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .map((item) => (
-          <div key={item.id} style={expenseCard}>
-            <div>
-              <h3 style={{ marginBottom: "5px" }}>
-                {item.name}
-              </h3>
+      {/* Expenses */}
+      {sortedDates.map((dateKey) => {
+        const dayTotal = grouped[dateKey].reduce(
+          (sum, item) => sum + item.amount,
+          0
+        );
 
-              <p style={amountStyle}>₹{item.amount}</p>
-
-              <small style={dateStyle}>
+        return (
+          <div key={dateKey} style={dayCardStyle}>
+            <div style={dayHeaderStyle}>
+              <span>
                 📅{" "}
-                {new Date(item.date).toLocaleDateString(
-                  "en-GB",
-                  {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  }
-                )}
-              </small>
+                {new Date(dateKey).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </span>
 
-              <br />
-
-              <small style={{ color: "#555" }}>
-                🏷 {item.category}
-              </small>
+              <span style={dayTotalStyle}>
+                ₹{dayTotal.toLocaleString()}
+              </span>
             </div>
 
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                onClick={() => editExpense(item)}
-                style={editButton}
+            {grouped[dateKey].map((item, index) => (
+              <div
+                key={item.id}
+                style={{
+                  ...expenseItemStyle,
+                  animationDelay: `${index * 0.05}s`,
+                }}
+                className="expense-item"
               >
-                Edit
-              </button>
+                <div>
+                  <div style={expenseNameStyle}>{item.name}</div>
 
-              <button
-                onClick={() => deleteExpense(item.id)}
-                style={deleteButton}
-              >
-                Delete
-              </button>
-            </div>
+                  <div style={expenseAmountStyle}>
+                    ₹{item.amount}
+                  </div>
+
+                  <small style={expenseCategoryStyle}>
+                    🏷 {item.category}
+                  </small>
+                </div>
+
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    onClick={() => editExpense(item)}
+                    style={editButtonStyle}
+                  >
+                    ✏ Edit
+                  </button>
+
+                  <button
+                    onClick={() => deleteExpense(item.id)}
+                    style={deleteButtonStyle}
+                  >
+                    ✕ Delete
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        );
+      })}
+
+      {sortedDates.length === 0 && (
+        <p style={emptyStyle}>
+          No expenses yet. Add your first one!
+        </p>
+      )}
     </div>
   );
 }
 
+// ---------- Styles ----------
 const containerStyle = {
-  maxWidth: "650px",
-  margin: "30px auto",
-  padding: "25px",
-  background: "#f4f4f4",
-  borderRadius: "15px",
-  fontFamily: "Times New Roman, Times, serif",
+  maxWidth: "620px",
+  margin: "40px auto",
+  padding: "30px",
+  background:
+    "linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.95))",
+  borderRadius: "28px",
+  boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+  color: "#fff",
+  fontFamily: "'Trebuchet MS', sans-serif",
 };
 
-const titleStyle = {
+const headerStyle = {
   textAlign: "center",
-  marginBottom: "20px",
-  color: "#1d4ed8",
-  fontSize: "34px",
-  fontFamily: "Times New Roman, Times, serif",
+  fontSize: "36px",
+  fontWeight: "700",
+  marginBottom: "30px",
+  color: "#38bdf8",
+  letterSpacing: "1px",
+  fontFamily: "'Trebuchet MS', sans-serif",
 };
 
-const formStyle = {
-  background: "white",
+const formCardStyle = {
+  background: "rgba(255,255,255,0.06)",
+  borderRadius: "20px",
   padding: "20px",
-  borderRadius: "12px",
-  boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+  marginBottom: "20px",
+  border: "1px solid rgba(255,255,255,0.08)",
 };
 
 const inputStyle = {
   width: "100%",
-  padding: "12px",
-  marginBottom: "12px",
-  borderRadius: "8px",
-  border: "1px solid #ccc",
+  padding: "15px",
+  marginBottom: "14px",
+  borderRadius: "14px",
+  border: "1px solid rgba(255,255,255,0.12)",
+  background: "rgba(255,255,255,0.08)",
+  color: "#fff",
   fontSize: "16px",
-  fontFamily: "Times New Roman, Times, serif",
-  textTransform: "uppercase",
+  fontFamily: "'Trebuchet MS', sans-serif",
   boxSizing: "border-box",
+  outline: "none",
 };
 
-const addButton = {
+const addButtonStyle = {
   width: "100%",
-  padding: "12px",
-  background: "#2563eb",
-  color: "white",
+  padding: "15px",
+  background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+  color: "#fff",
   border: "none",
-  borderRadius: "8px",
-  fontSize: "17px",
+  borderRadius: "14px",
   cursor: "pointer",
-  fontFamily: "Times New Roman, Times, serif",
+  fontSize: "17px",
+  fontWeight: "700",
+  boxShadow: "0 4px 12px rgba(59,130,246,0.4)",
+  fontFamily: "'Trebuchet MS', sans-serif",
 };
 
-const totalBox = {
-  marginTop: "20px",
-  background: "#dbeafe",
-  padding: "15px",
-  borderRadius: "10px",
-  fontSize: "24px",
-  fontWeight: "bold",
-  color: "#1d4ed8",
-  fontFamily: "Times New Roman, Times, serif",
-};
-
-const expenseCard = {
-  background: "white",
-  marginTop: "15px",
-  padding: "15px",
-  borderRadius: "10px",
+const totalCardStyle = {
+  background: "rgba(56,189,248,0.1)",
+  borderRadius: "16px",
+  padding: "18px 24px",
+  marginBottom: "20px",
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
 };
 
-const amountStyle = {
-  color: "#2563eb",
-  fontWeight: "bold",
-  margin: "5px 0",
-  fontFamily: "Times New Roman, Times, serif",
+const totalLabel = {
+  fontSize: "20px",
+  color: "#cbd5e1",
 };
 
-const dateStyle = {
-  color: "#444",
-  fontFamily: "Times New Roman, Times, serif",
+const totalValue = {
+  fontSize: "30px",
+  fontWeight: "700",
+  color: "#38bdf8",
 };
 
-const editButton = {
-  background: "#22c55e",
-  color: "white",
-  border: "none",
+const dayCardStyle = {
+  background: "rgba(255,255,255,0.04)",
+  borderRadius: "20px",
+  padding: "18px",
+  marginTop: "20px",
+};
+
+const dayHeaderStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  marginBottom: "15px",
+  color: "#fff",
+  fontWeight: "600",
+  fontSize: "17px",
+};
+
+const dayTotalStyle = {
+  color: "#38bdf8",
+  fontWeight: "700",
+};
+
+const expenseItemStyle = {
+  background: "rgba(255,255,255,0.06)",
+  borderRadius: "14px",
+  padding: "14px 16px",
+  marginTop: "12px",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+};
+
+const expenseNameStyle = {
+  fontSize: "18px",
+  fontWeight: "700",
+};
+
+const expenseAmountStyle = {
+  fontSize: "16px",
+  color: "#38bdf8",
+  marginTop: "4px",
+};
+
+const expenseCategoryStyle = {
+  color: "#cbd5e1",
+  fontSize: "13px",
+};
+
+const editButtonStyle = {
+  background: "rgba(34,197,94,0.2)",
+  color: "#86efac",
+  border: "1px solid rgba(34,197,94,0.3)",
   padding: "8px 12px",
-  borderRadius: "6px",
+  borderRadius: "10px",
   cursor: "pointer",
-  fontFamily: "Times New Roman, Times, serif",
+  fontSize: "14px",
+  fontWeight: "600",
 };
 
-const deleteButton = {
-  background: "#ef4444",
-  color: "white",
-  border: "none",
+const deleteButtonStyle = {
+  background: "rgba(239,68,68,0.2)",
+  color: "#fca5a5",
+  border: "1px solid rgba(239,68,68,0.3)",
   padding: "8px 12px",
-  borderRadius: "6px",
+  borderRadius: "10px",
   cursor: "pointer",
-  fontFamily: "Times New Roman, Times, serif",
+  fontSize: "14px",
+  fontWeight: "600",
+};
+
+const emptyStyle = {
+  textAlign: "center",
+  color: "#94a3b8",
+  marginTop: "20px",
+  fontSize: "16px",
 };
 
 export default App;
