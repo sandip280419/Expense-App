@@ -1,3 +1,4 @@
+import "@fontsource/poppins";
 import React, { useState, useEffect } from "react";
 
 function App() {
@@ -41,22 +42,12 @@ function App() {
     setExpenses(updated);
   };
 
-  const editExpense = (item) => {
-    setDate(item.date);
-    setName(item.name);
-    setAmount(item.amount);
-    setCategory(item.category);
-
-    deleteExpense(item.id);
-  };
-
   const groupedExpenses = expenses.reduce((groups, expense) => {
     if (!groups[expense.date]) {
       groups[expense.date] = [];
     }
 
     groups[expense.date].push(expense);
-
     return groups;
   }, {});
 
@@ -68,19 +59,21 @@ function App() {
   return (
     <div
       style={{
-        maxWidth: "600px",
+        maxWidth: "650px",
         margin: "30px auto",
         padding: "20px",
         background: "#ffffff",
-        borderRadius: "12px",
-        boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-        fontFamily: "Arial",
+        borderRadius: "20px",
+        boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+        fontFamily: "'Poppins', sans-serif",
       }}
     >
       <h1
         style={{
           textAlign: "center",
-          color: "#007bff",
+          color: "#2563eb",
+          marginBottom: "20px",
+          fontSize: "32px",
         }}
       >
         Expense Tracker 💰
@@ -126,20 +119,37 @@ function App() {
         onClick={addExpense}
         style={{
           width: "100%",
-          padding: "12px",
-          background: "#007bff",
+          padding: "14px",
+          background: "#2563eb",
           color: "#fff",
           border: "none",
-          borderRadius: "8px",
+          borderRadius: "12px",
           cursor: "pointer",
-          marginBottom: "20px",
+          marginBottom: "25px",
           fontSize: "16px",
+          fontWeight: "600",
         }}
       >
         Add Expense
       </button>
 
-      <h2>Grand Total: ₹{grandTotal}</h2>
+      <div
+        style={{
+          background: "#eff6ff",
+          padding: "15px",
+          borderRadius: "16px",
+          marginBottom: "20px",
+        }}
+      >
+        <h2
+          style={{
+            margin: 0,
+            color: "#1e40af",
+          }}
+        >
+          Grand Total: ₹{grandTotal}
+        </h2>
+      </div>
 
       {Object.keys(groupedExpenses)
         .sort((a, b) => new Date(b) - new Date(a))
@@ -153,67 +163,97 @@ function App() {
             <div
               key={dateKey}
               style={{
-                background: "#f5f5f5",
-                padding: "15px",
-                borderRadius: "10px",
+                background: "#eef4ff",
+                padding: "18px",
+                borderRadius: "16px",
                 marginTop: "20px",
+                boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
               }}
             >
-              <h3>📅 {dateKey}</h3>
+              <h3
+                style={{
+                  color: "#1d4ed8",
+                  marginBottom: "10px",
+                }}
+              >
+                📅{" "}
+                {new Date(dateKey).toLocaleDateString(
+                  "en-GB",
+                  {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  }
+                )}
+              </h3>
 
-              <h4>Total: ₹{total}</h4>
+              <h4
+                style={{
+                  marginTop: "0",
+                  color: "#111827",
+                }}
+              >
+                Total: ₹{total}
+              </h4>
 
               {groupedExpenses[dateKey].map((item) => (
                 <div
                   key={item.id}
                   style={{
-                    background: "#fff",
-                    padding: "10px",
-                    borderRadius: "8px",
-                    marginTop: "10px",
+                    background: "#ffffff",
+                    padding: "14px",
+                    borderRadius: "14px",
+                    marginTop: "12px",
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    boxShadow:
+                      "0 2px 8px rgba(0,0,0,0.05)",
                   }}
                 >
                   <div>
-                    <strong>{item.name}</strong>
-
-                    <div>₹{item.amount}</div>
-
-                    <small>🏷 {item.category}</small>
-                  </div>
-
-                  <div>
-                    <button
-                      onClick={() => editExpense(item)}
+                    <strong
                       style={{
-                        background: "#007bff",
-                        color: "#fff",
-                        border: "none",
-                        padding: "8px 12px",
-                        borderRadius: "6px",
-                        cursor: "pointer",
-                        marginRight: "10px",
+                        fontSize: "16px",
+                        color: "#111827",
                       }}
                     >
-                      Edit
-                    </button>
+                      {item.name}
+                    </strong>
 
-                    <button
-                      onClick={() => deleteExpense(item.id)}
+                    <div
                       style={{
-                        background: "red",
-                        color: "#fff",
-                        border: "none",
-                        padding: "8px 12px",
-                        borderRadius: "6px",
-                        cursor: "pointer",
+                        marginTop: "4px",
+                        color: "#2563eb",
+                        fontWeight: "600",
                       }}
                     >
-                      Delete
-                    </button>
+                      ₹{item.amount}
+                    </div>
+
+                    <small
+                      style={{
+                        color: "#6b7280",
+                      }}
+                    >
+                      🏷 {item.category}
+                    </small>
                   </div>
+
+                  <button
+                    onClick={() => deleteExpense(item.id)}
+                    style={{
+                      background: "#ef4444",
+                      color: "#fff",
+                      border: "none",
+                      padding: "8px 14px",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Delete
+                  </button>
                 </div>
               ))}
             </div>
@@ -225,10 +265,13 @@ function App() {
 
 const inputStyle = {
   width: "100%",
-  padding: "12px",
-  marginBottom: "10px",
-  borderRadius: "8px",
-  border: "1px solid #ccc",
+  padding: "14px",
+  marginBottom: "12px",
+  borderRadius: "12px",
+  border: "1px solid #d1d5db",
+  fontSize: "15px",
+  fontFamily: "'Poppins', sans-serif",
+  boxSizing: "border-box",
 };
 
 export default App;
