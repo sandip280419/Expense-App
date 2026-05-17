@@ -6,6 +6,15 @@ function App() {
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
   const [category, setCategory] = useState("Food");
+
+  const [income, setIncome] = useState(
+    localStorage.getItem("income") || ""
+  );
+
+  const [budget, setBudget] = useState(
+    localStorage.getItem("budget") || ""
+  );
+
   const [editId, setEditId] = useState(null);
 
   const [items, setItems] = useState(() => {
@@ -16,6 +25,14 @@ function App() {
   useEffect(() => {
     localStorage.setItem("expenses", JSON.stringify(items));
   }, [items]);
+
+  useEffect(() => {
+    localStorage.setItem("income", income);
+  }, [income]);
+
+  useEffect(() => {
+    localStorage.setItem("budget", budget);
+  }, [budget]);
 
   const addExpense = () => {
     if (!description || !amount || !date) return;
@@ -72,6 +89,7 @@ function App() {
     if (!grouped[item.date]) {
       grouped[item.date] = [];
     }
+
     grouped[item.date].push(item);
   });
 
@@ -79,6 +97,8 @@ function App() {
     (sum, item) => sum + item.amount,
     0
   );
+
+  const balance = (parseFloat(income || 0) - grandTotal);
 
   const currentMonth = new Date().getMonth();
 
@@ -101,7 +121,7 @@ function App() {
     >
       <div
         style={{
-          maxWidth: "600px",
+          maxWidth: "650px",
           margin: "auto",
           background: "white",
           padding: "25px",
@@ -113,11 +133,26 @@ function App() {
           style={{
             textAlign: "center",
             color: "#2563eb",
-            marginBottom: "20px",
           }}
         >
           Expense Tracker 💰
         </h1>
+
+        <input
+          type="number"
+          placeholder="Monthly Income"
+          value={income}
+          onChange={(e) => setIncome(e.target.value)}
+          style={inputStyle}
+        />
+
+        <input
+          type="number"
+          placeholder="Monthly Budget"
+          value={budget}
+          onChange={(e) => setBudget(e.target.value)}
+          style={inputStyle}
+        />
 
         <input
           type="date"
@@ -159,11 +194,38 @@ function App() {
           {editId ? "Update Expense" : "Add Expense"}
         </button>
 
-        <h2 style={{ marginTop: "20px" }}>
-          Grand Total: ₹{grandTotal}
-        </h2>
+        <div
+          style={{
+            background: "#eff6ff",
+            padding: "15px",
+            borderRadius: "10px",
+            marginTop: "20px",
+          }}
+        >
+          <h2>Grand Total: ₹{grandTotal}</h2>
 
-        <h3>This Month Total: ₹{monthlyTotal}</h3>
+          <h3>This Month: ₹{monthlyTotal}</h3>
+
+          <h3>Income: ₹{income || 0}</h3>
+
+          <h3>
+            Balance:
+            <span
+              style={{
+                color: balance < 0 ? "red" : "green",
+                marginLeft: "5px",
+              }}
+            >
+              ₹{balance}
+            </span>
+          </h3>
+
+          {budget && grandTotal > parseFloat(budget) && (
+            <h3 style={{ color: "red" }}>
+              ⚠ Budget Exceeded
+            </h3>
+          )}
+        </div>
 
         {Object.keys(grouped)
           .sort((a, b) => new Date(b) - new Date(a))
