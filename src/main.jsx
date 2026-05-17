@@ -1,99 +1,118 @@
 import React, { useState } from "react";
+import ReactDOM from "react-dom/client";
 
-export default function ExpenseNotepad() {
-
+function App() {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState("");
   const [items, setItems] = useState([]);
 
-  const addItem = () => {
-    if (!description || !amount || !date) return;
+  const addExpense = () => {
+    if (!description || !amount) return;
 
     const newItem = {
       id: Date.now(),
       description,
-      date,
-      amount: parseFloat(amount),
+      amount,
     };
 
     setItems([newItem, ...items]);
+
     setDescription("");
     setAmount("");
-    setDate("");
   };
 
-  const total = items.reduce((sum, item) => sum + item.amount, 0);
+  const total = items.reduce(
+    (sum, item) => sum + parseFloat(item.amount),
+    0
+  );
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 flex items-center justify-center">
-      <div className="bg-white shadow-2xl rounded-3xl p-6 w-full max-w-2xl">
-        <h1 className="text-3xl font-bold text-center mb-6">
-          Daily Expense Notepad
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#f3f4f6",
+        padding: "20px",
+        fontFamily: "Arial",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "500px",
+          margin: "auto",
+          background: "white",
+          padding: "20px",
+          borderRadius: "12px",
+          boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+        }}
+      >
+        <h1 style={{ textAlign: "center" }}>
+          বাংলা Expense App 💰
         </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="border rounded-2xl p-3 outline-none focus:ring-2 focus:ring-black"
-          />
+        <input
+          type="text"
+          placeholder="খরচের নাম"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginTop: "10px",
+          }}
+        />
 
-          <input
-            type="text"
-            placeholder="Enter Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="border rounded-2xl p-3 outline-none focus:ring-2 focus:ring-black"
-          />
-
-          <input
-            type="number"
-            placeholder="Amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="border rounded-2xl p-3 outline-none focus:ring-2 focus:ring-black"
-          />
-        </div>
+        <input
+          type="number"
+          placeholder="টাকার পরিমাণ"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginTop: "10px",
+          }}
+        />
 
         <button
-          onClick={addItem}
-          className="w-full bg-black text-white rounded-2xl py-3 text-lg font-semibold hover:opacity-90 transition"
+          onClick={addExpense}
+          style={{
+            width: "100%",
+            padding: "12px",
+            marginTop: "15px",
+            background: "#2563eb",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+          }}
         >
-          Add Entry
+          Add Expense
         </button>
 
-        <div className="mt-8">
-          <div className="grid grid-cols-3 font-bold text-lg border-b pb-2 mb-3">
-            <span>Date</span>
-            <span>Description</span>
-            <span className="text-right">Amount</span>
-          </div>
+        <h2 style={{ marginTop: "20px" }}>
+          Total: ₹{total}
+        </h2>
 
-          <div className="space-y-3 max-h-80 overflow-y-auto">
-            {items.length === 0 ? (
-              <p className="text-gray-500 text-center">No entries added yet</p>
-            ) : (
-              items.map((item) => (
-                <div
-                  key={item.id}
-                  className="grid grid-cols-3 bg-gray-50 p-3 rounded-2xl items-center"
-                >
-                  <span>{item.date}</span>
-                  <span>{item.description}</span>
-                  <span className="text-right">₹ {item.amount.toFixed(2)}</span>
-                </div>
-              ))
-            )}
+        {items.map((item) => (
+          <div
+            key={item.id}
+            style={{
+              padding: "10px",
+              marginTop: "10px",
+              background: "#e5e7eb",
+              borderRadius: "8px",
+            }}
+          >
+            {item.description} — ₹{item.amount}
           </div>
-        </div>
-
-        <div className="mt-6 border-t pt-4 flex justify-between text-2xl font-bold">
-          <span>Total</span>
-          <span>₹ {total.toFixed(2)}</span>
-        </div>
+        ))}
       </div>
     </div>
   );
 }
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
