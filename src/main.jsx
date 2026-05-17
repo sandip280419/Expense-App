@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 
 function App() {
+  const [darkMode, setDarkMode] = useState(false);
+
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
@@ -98,7 +100,8 @@ function App() {
     0
   );
 
-  const balance = (parseFloat(income || 0) - grandTotal);
+  const balance =
+    parseFloat(income || 0) - grandTotal;
 
   const currentMonth = new Date().getMonth();
 
@@ -110,33 +113,59 @@ function App() {
       : sum;
   }, 0);
 
+  const categoryTotals = {};
+
+  items.forEach((item) => {
+    if (!categoryTotals[item.category]) {
+      categoryTotals[item.category] = 0;
+    }
+
+    categoryTotals[item.category] += item.amount;
+  });
+
   return (
     <div
       style={{
         minHeight: "100vh",
-        background: "#f1f5f9",
-        padding: "30px",
+        background: darkMode ? "#0f172a" : "#f1f5f9",
+        padding: "20px",
         fontFamily: "Arial",
+        color: darkMode ? "white" : "black",
       }}
     >
       <div
         style={{
-          maxWidth: "650px",
+          maxWidth: "700px",
           margin: "auto",
-          background: "white",
+          background: darkMode ? "#1e293b" : "white",
           padding: "25px",
           borderRadius: "15px",
           boxShadow: "0 0 15px rgba(0,0,0,0.1)",
         }}
       >
-        <h1
+        <div
           style={{
-            textAlign: "center",
-            color: "#2563eb",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
-          Expense Tracker 💰
-        </h1>
+          <h1 style={{ color: "#2563eb" }}>
+            Expense Tracker 💰
+          </h1>
+
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            style={{
+              padding: "10px",
+              borderRadius: "8px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            {darkMode ? "☀ Light" : "🌙 Dark"}
+          </button>
+        </div>
 
         <input
           type="number"
@@ -196,7 +225,7 @@ function App() {
 
         <div
           style={{
-            background: "#eff6ff",
+            background: darkMode ? "#334155" : "#eff6ff",
             padding: "15px",
             borderRadius: "10px",
             marginTop: "20px",
@@ -212,7 +241,7 @@ function App() {
             Balance:
             <span
               style={{
-                color: balance < 0 ? "red" : "green",
+                color: balance < 0 ? "red" : "lime",
                 marginLeft: "5px",
               }}
             >
@@ -227,6 +256,28 @@ function App() {
           )}
         </div>
 
+        <div
+          style={{
+            marginTop: "20px",
+            background: darkMode ? "#334155" : "#f8fafc",
+            padding: "15px",
+            borderRadius: "10px",
+          }}
+        >
+          <h2>Category Summary 📊</h2>
+
+          {Object.keys(categoryTotals).map((cat) => (
+            <div
+              key={cat}
+              style={{
+                marginTop: "10px",
+              }}
+            >
+              {cat}: ₹{categoryTotals[cat]}
+            </div>
+          ))}
+        </div>
+
         {Object.keys(grouped)
           .sort((a, b) => new Date(b) - new Date(a))
           .map((dateKey) => {
@@ -239,7 +290,9 @@ function App() {
               <div
                 key={dateKey}
                 style={{
-                  background: "#e2e8f0",
+                  background: darkMode
+                    ? "#334155"
+                    : "#e2e8f0",
                   padding: "15px",
                   borderRadius: "10px",
                   marginTop: "20px",
@@ -253,7 +306,9 @@ function App() {
                   <div
                     key={item.id}
                     style={{
-                      background: "white",
+                      background: darkMode
+                        ? "#1e293b"
+                        : "white",
                       padding: "10px",
                       borderRadius: "8px",
                       marginTop: "10px",
@@ -287,7 +342,9 @@ function App() {
                       </button>
 
                       <button
-                        onClick={() => deleteExpense(item.id)}
+                        onClick={() =>
+                          deleteExpense(item.id)
+                        }
                         style={{
                           background: "red",
                           color: "white",
